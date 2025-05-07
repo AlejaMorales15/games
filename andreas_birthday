@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Encuentra el Pastel - Cumpleaños de Andrea</title>
+  <!-- Agregamos la librería de confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'American Typewriter', 'Courier New', Courier, monospace;
+      background: none;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      position: relative;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #000 url('public/background_the_office.jpg') no-repeat center center fixed;
+      background-size: cover;
+      opacity: 1;
+      z-index: -1;
+    }
+    h1 {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 80px);
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .tile {
+      width: 80px;
+      height: 80px;
+      background-color: #444;
+      border: 2px solid #777;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+      user-select: none;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    .tile img {
+      width: 50px;
+      height: 50px;
+      object-fit: contain;
+      display: block;
+    }
+    .tile:hover {
+      background-color: #555;
+    }
+    .tile.cake {
+      animation: celebrate 1s ease-in-out;
+    }
+    .tile.wrong {
+      animation: shake 0.3s;
+    }
+    @keyframes celebrate {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2) rotate(10deg); }
+      75% { transform: scale(1.1) rotate(-10deg); }
+      100% { transform: scale(1) rotate(0); }
+    }
+    @keyframes shake {
+      0% { transform: scale(1); }
+      25% { transform: scale(0.8); }
+      50% { transform: scale(1); }
+      100% { transform: scale(1); }
+    }
+    #message {
+      margin-top: 20px;
+      font-size: 18px;
+      text-align: center;
+    }
+    #attempts {
+      margin: 10px 0;
+      font-size: 18px;
+    }
+    #resetButton {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #444;
+      color: white;
+      border: 2px solid #777;
+      border-radius: 5px;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      transition: background 0.2s;
+    }
+    #resetButton:hover {
+      background-color: #555;
+    }
+    @font-face {
+      font-family: 'American Typewriter';
+      src: url('public/American Typewriter Regular.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎂 ¡Ayuda a Andrea a encontrar su pastel de cumpleaños!</h1>
+  <div id="musicControl" style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+    <button id="playMusicButton" style="font-size: 28px; background: none; color: #fff; border: none; cursor: pointer; font-family: 'American Typewriter', 'Courier New', Courier, monospace;">▶️</button>
+    <span style="font-size: 18px; color: #fff; font-family: 'American Typewriter', 'Courier New', Courier, monospace;">Activa la música</span>
+  </div>
+  <audio id="themeAudio">
+    <source src="public/The_Office_Theme_Song.mp3" type="audio/mpeg">
+    Tu navegador no soporta el elemento de audio.
+  </audio>
+  <div id="attempts">Intentos: 0</div>
+  <div class="grid" id="grid"></div>
+  <div id="message"></div>
+  <button id="resetButton">Reiniciar Juego</button>
+
+  <script>
+    const grid = document.getElementById('grid');
+    const message = document.getElementById('message');
+    const attemptsDisplay = document.getElementById('attempts');
+    const resetButton = document.getElementById('resetButton');
+    const playMusicButton = document.getElementById('playMusicButton');
+    const themeAudio = document.getElementById('themeAudio');
+    let attempts = 0;
+    let gameOver = false;
+    let cakeIndex = 0;
+
+    const characters = [
+      '🧑‍💼', '👩‍💼', '👨‍💼', '🕵️',
+      '👨‍💻', '💼', '📎', '📠',
+      '📊', '📅', '📱', '📁',
+      '📝', '📋', '📇', '📌'
+    ];
+
+    function initializeGame() {
+      grid.innerHTML = '';
+      message.innerHTML = '';
+      attempts = 0;
+      attemptsDisplay.textContent = `Intentos: ${attempts}`;
+      gameOver = false;
+      cakeIndex = Math.floor(Math.random() * 16);
+
+      for (let i = 0; i < 16; i++) {
+        const tile = document.createElement('div');
+        tile.classList.add('tile');
+        tile.dataset.index = i;
+        tile.style.pointerEvents = 'auto';
+        // Imagen de Andrea por defecto
+        const img = document.createElement('img');
+        img.src = 'public/andre_picture.png';
+        img.alt = 'Andrea';
+        tile.appendChild(img);
+        tile.onclick = function() {
+          if (gameOver || tile.classList.contains('cake') || tile.classList.contains('wrong')) return;
+          attempts++;
+          attemptsDisplay.textContent = `Intentos: ${attempts}`;
+          if (parseInt(tile.dataset.index) === cakeIndex) {
+            tile.innerHTML = '🎂';
+            tile.classList.add('cake');
+            message.innerHTML = '<strong>Joyeux anniversaire Andrea!</strong><br>🎉 El equipo UProfit te celebra como a la mejor jefa en Scranton (y el mundo).';
+            gameOver = true;
+            lanzarConfetti();
+            document.querySelectorAll('.tile').forEach(t => t.style.pointerEvents = 'none');
+          } else {
+            tile.innerHTML = characters[i];
+            tile.classList.add('wrong');
+            tile.style.pointerEvents = 'none';
+            setTimeout(() => tile.classList.remove('wrong'), 400);
+          }
+        };
+        grid.appendChild(tile);
+      }
+    }
+
+    function lanzarConfetti() {
+      const duration = 3 * 1000;
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+      function randomInRange(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+      const interval = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+        const particleCount = 50 * (timeLeft / duration);
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+        });
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+        });
+      }, 250);
+    }
+
+    resetButton.onclick = function() {
+      initializeGame();
+    };
+
+    playMusicButton.onclick = function() {
+      if (themeAudio.paused) {
+        themeAudio.play();
+      } else {
+        themeAudio.pause();
+      }
+    };
+
+    themeAudio.onplay = function() {
+      playMusicButton.textContent = '⏸️';
+    };
+
+    themeAudio.onpause = function() {
+      playMusicButton.textContent = '▶️';
+    };
+
+    // Inicializar el juego al cargar
+    initializeGame();
+  </script>
+</body>
+</html> 
